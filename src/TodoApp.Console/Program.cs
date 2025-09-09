@@ -5,7 +5,7 @@ using TodoApp.Infrastructure;
 
 var services = new ServiceCollection();
 services.AddInfrastructure();
-var serviceProvider = services.BuildServiceProvider();
+ServiceProvider serviceProvider = services.BuildServiceProvider();
 
 var todoService = serviceProvider.GetRequiredService<ITodoService>();
 
