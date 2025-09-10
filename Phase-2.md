@@ -8,6 +8,13 @@
 - A simple data store class
 - Seeding initial data
 
+## Prereqs
+- Make sure you have completed Phase 0 (see Phase-1.md)
+- change to the `Phase_2-Data_Structures_Seeding` branch:
+```bash
+git checkout Phase_2-Data_Structures_Seeding
+```
+
 ## Steps
 
 ### 1) Add the in-memory store
@@ -168,6 +175,15 @@ dotnet run
 - From Visual Studio / Rider: Run the `TodoApp.Console` project as before.
 - You should see seeded items immediately.
 - Use the menu to Add, List, Complete, or Delete.
+
+## 4) Commit and push the code:
+- Make sure you are in the branch: `Phase_2-Data_Structures_Seeding`
+- In the Terminal run the following commnads:
+   ```bash
+   git add .
+   git commit -m "Phase_2-Data_Structures_Seeding - FirstName LastName"
+   git push --set-upstream origin Phase_2-Data_Structures_Seeding
+   ```
 
 ## Acceptance Criteria
 

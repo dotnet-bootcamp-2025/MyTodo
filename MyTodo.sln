@@ -26,11 +26,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{832D4791-0371-4270-ACE2-493031034B7E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phases", "Phases", "{17665DC1-AC4F-4EB7-BCD0-B54E48C32B82}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 - Phases", "01 - Phases", "{17665DC1-AC4F-4EB7-BCD0-B54E48C32B82}"
 	ProjectSection(SolutionItems) = preProject
+		Git-101.md = Git-101.md
 		Phase-0.md = Phase-0.md
 		Phase-1.md = Phase-1.md
 		Phase-2.md = Phase-2.md
+		Phase-3.md = Phase-3.md
+		Phase-4.md = Phase-4.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00 - Prerequesites", "00 - Prerequesites", "{D0062774-BA7C-4582-B29D-88BB29A6FA66}"
+	ProjectSection(SolutionItems) = preProject
+		Git-101.md = Git-101.md
 	EndProjectSection
 EndProject
 Global
@@ -127,6 +135,7 @@ Global
 		{747E83B0-9ACE-4A27-881C-7B6AB0BBCF8F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{B5F82FE6-D1C6-4C11-A7B5-CD81409320F5} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{17665DC1-AC4F-4EB7-BCD0-B54E48C32B82} = {832D4791-0371-4270-ACE2-493031034B7E}
+		{D0062774-BA7C-4582-B29D-88BB29A6FA66} = {832D4791-0371-4270-ACE2-493031034B7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AD294A7-AF7F-42CD-8D79-4BB0AA09FC99}

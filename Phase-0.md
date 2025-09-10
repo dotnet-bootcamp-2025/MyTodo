@@ -9,6 +9,7 @@
 ## Prereqs
 - .NET SDK installed (same as repo)
 - Git + an editor (VS 2022 Community Edition / Rider / VS Code)
+- Make sure you fetch the feature branches (see Git-101.md)
 
 ## Steps
 1) **Clone & open**
@@ -39,10 +40,12 @@
 1. Right-click `TodoApp.Console` and select `Run 'TodoApp.Console'`.
 
 
-4) **Run the API (optional)**
-   ```bash
+**(OPTIONAL) Run the API**
+
+```bash
    cd ../TodoApp.Api
    dotnet run
+```
 
 Open the URL shown in the console to see Swagger
 
@@ -53,14 +56,23 @@ Open the URL shown in the console to see Swagger
 - From **Rider**:
 1. Right-click `TodoApp.Api` and select `Run 'TodoApp.Api'`.
 
+5) Commit dummy changes
+   - Create a new branch named `phase-0-setup` by typing:
+   ```bash
+	git checkout -b phase-0-setup
+   ```
+   - Add a comment in `Program.cs` at the top like `// Phase 0 setup complete`
+   - Commit and push by following these commands:
+   ```bash
+   git add .
+   git commit -m "m1-00-setup - FirstName LastName"
+   git push --set-upstream origin phase-0-setup
+   ```
+
 ## Acceptance Criteria
 
 - Console app launches without errors.
 - (Optional) API launches and shows Swagger UI.
-
-C## ommit message suggestion
-
-`chore: verify local dev setup and run console/api`
 
 ## PR checklist (student)
 

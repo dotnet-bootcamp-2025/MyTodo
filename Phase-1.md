@@ -1,11 +1,18 @@
-# Phase 1 — C# Syntax & Variables & Loops (Console I/O + Todo entity)
+ï»¿# Phase 1 â€” C# Syntax & Variables & Loops (Console I/O + Todo entity)
 
 **Goal:** Practice namespaces, program entry point, classes/records, fields vs properties, `var` vs explicit types, and immutability.
 
-## What you’ll learn
+## What youâ€™ll learn
 - Create a simple domain entity as a **record**
 - Use `Console.ReadLine()` / `Console.WriteLine()` for basic I/O
 - Decide when to use `var` vs explicit types
+
+## Prereqs
+- Make sure you have completed Phase 0 (see Phase-0.md)
+- change to the `Phase_1_CS_Syntax_Variables` branch:
+- ```bash
+git checkout Phase_1_CS_Syntax_Variables
+```
 
 ## Steps
 
@@ -23,7 +30,7 @@ public record Todo(
 );
 ```
 
-We’re starting with an immutable record. You’ll update items by creating a copy later
+Weâ€™re starting with an immutable record. Youâ€™ll update items by creating a copy later
 
 ## 2) Basic console skeleton
 - Open src/TodoApp.Console/Program.cs and add a minimal loop:
@@ -63,13 +70,25 @@ cd src/TodoApp.Console
 dotnet run
 ```
 
-
 - From **Visual Studio**:
 1. Set `TodoApp.Console` as the startup project and run (right-click).
 2. At the top menu, select `Debug > Start Without Debugging` (or press `Ctrl + F5`).
 
 - From **Rider**:
 1. Right-click `TodoApp.Console` and select `Run 'TodoApp.Console'`.
+
+## 5) Test
+- Type a title and press Enter â†’ see confirmation
+- Press Enter again â†’ app exits
+
+## 6) Commit and push the code:
+- Make sure you are in the branch: `Phase_1_CS_Syntax_Variables`
+- In the Terminal run the following commnads:
+   ```bash
+   git add .
+   git commit -m "Phase_1_CS_Syntax_Variables - FirstName LastName"
+   git push --set-upstream origin Phase_1_CS_Syntax_Variables
+   ```
 
 ## Acceptance Criteria
 
