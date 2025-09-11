@@ -1,4 +1,3 @@
-// Phase 0 setup complete
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
