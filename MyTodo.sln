@@ -28,7 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{832D4791-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 - Phases", "01 - Phases", "{17665DC1-AC4F-4EB7-BCD0-B54E48C32B82}"
 	ProjectSection(SolutionItems) = preProject
-		Git-101.md = Git-101.md
 		Phase-0.md = Phase-0.md
 		Phase-1.md = Phase-1.md
 		Phase-2.md = Phase-2.md
