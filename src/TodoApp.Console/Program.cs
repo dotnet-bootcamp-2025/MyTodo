@@ -9,6 +9,7 @@ var serviceProvider = services.BuildServiceProvider();
 
 var todoService = serviceProvider.GetRequiredService<ITodoService>();
 
+// Main loop
 bool exit = false;
 while (!exit)
 {
