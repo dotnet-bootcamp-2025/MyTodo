@@ -1,7 +1,7 @@
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Infrastructure;
-
+//Phase 0 setup complete
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
