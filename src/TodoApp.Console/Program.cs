@@ -8,7 +8,7 @@ services.AddInfrastructure();
 var serviceProvider = services.BuildServiceProvider();
 
 var todoService = serviceProvider.GetRequiredService<ITodoService>();
-
+//comment
 bool exit = false;
 while (!exit)
 {
