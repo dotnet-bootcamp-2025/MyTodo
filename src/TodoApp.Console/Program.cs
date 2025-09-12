@@ -1,8 +1,9 @@
+// Phase 0 setup complete
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Infrastructure;
-
+//Phase 0 setup complete. 
 var services = new ServiceCollection();
 services.AddInfrastructure();
 var serviceProvider = services.BuildServiceProvider();
