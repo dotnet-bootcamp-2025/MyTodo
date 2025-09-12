@@ -11,6 +11,7 @@ var serviceProvider = services.BuildServiceProvider();
 var todoService = serviceProvider.GetRequiredService<ITodoService>();
 
 // Main loop
+// test comment
 bool exit = false;
 while (!exit)
 {
