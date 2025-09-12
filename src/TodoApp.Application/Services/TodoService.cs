@@ -28,7 +28,7 @@ public class TodoService : ITodoService
 
     public async Task<TodoDto> CreateTodoAsync(CreateTodoDto createTodoDto)
     {
-        var todo = Todo.Create(createTodoDto.Title, createTodoDto.Description);
+        var todo = Todo_Old.Create(createTodoDto.Title, createTodoDto.Description);
         await _todoRepository.AddAsync(todo);
         return MapToDto(todo);
     }
@@ -76,7 +76,7 @@ public class TodoService : ITodoService
         return true;
     }
 
-    private static TodoDto MapToDto(Todo todo)
+    private static TodoDto MapToDto(Todo_Old todo)
     {
         return new TodoDto
         {

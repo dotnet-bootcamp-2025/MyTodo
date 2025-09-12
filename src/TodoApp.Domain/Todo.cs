@@ -1,55 +1,11 @@
-namespace TodoApp.Domain.Entities;
+﻿namespace TodoApp.Domain;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-public class Todo
-{
-    public Guid Id { get; private set; }
-    public string Title { get; private set; }
-    public string Description { get; private set; }
-    public bool IsCompleted { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? CompletedAt { get; private set; }
 
-    private Todo() { }
 
-    public static Todo Create(string title, string description)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-            throw new ArgumentException("Title cannot be empty", nameof(title));
+public record Todo(int Id, string Title, DateOnly? DueDate, bool IsDone = false);
 
-        return new Todo
-        {
-            Id = Guid.NewGuid(),
-            Title = title,
-            Description = description ?? string.Empty,
-            IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
-        };
-    }
-
-    public void MarkAsCompleted()
-    {
-        if (!IsCompleted)
-        {
-            IsCompleted = true;
-            CompletedAt = DateTime.UtcNow;
-        }
-    }
-
-    public void MarkAsIncomplete()
-    {
-        if (IsCompleted)
-        {
-            IsCompleted = false;
-            CompletedAt = null;
-        }
-    }
-
-    public void UpdateDetails(string title, string description)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-            throw new ArgumentException("Title cannot be empty", nameof(title));
-
-        Title = title;
-        Description = description ?? string.Empty;
-    }
-}
