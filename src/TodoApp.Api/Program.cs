@@ -1,3 +1,5 @@
+// Phase 0 setup complete 
+
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Infrastructure;
