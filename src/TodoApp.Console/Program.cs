@@ -1,3 +1,4 @@
+//phase 0 setup complete
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
@@ -8,7 +9,6 @@ services.AddInfrastructure();
 var serviceProvider = services.BuildServiceProvider();
 
 var todoService = serviceProvider.GetRequiredService<ITodoService>();
-//comments
 bool exit = false;
 while (!exit)
 {
