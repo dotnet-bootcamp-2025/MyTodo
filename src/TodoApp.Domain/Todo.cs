@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace TodoApp.Domain;
     public record Todo(
-        
         int Id,
         string Title,
         DateOnly? DueDate, 

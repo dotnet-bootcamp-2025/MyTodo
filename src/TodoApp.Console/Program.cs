@@ -17,4 +17,4 @@ while (true)
     var message = $"Created: [{newTodo.Id}] {newTodo.Title}";
     Console.WriteLine(message);
 }
-Console.WriteLine("Goodbye!");
+Console.WriteLine("Bye!");
