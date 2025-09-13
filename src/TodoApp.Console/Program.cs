@@ -22,7 +22,7 @@ while (true)
         break;
 
     // explicit type for clarity
-    Todo newTodo = new(id++, input, null, false);
+    TodoOld newTodo = new(id++, input, null, false);
 
     // 'var' is fine when the type is obvious from the RHS:
     var message = $"Created: [{newTodo.Id}] {newTodo.Title}";
