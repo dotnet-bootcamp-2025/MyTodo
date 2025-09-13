@@ -8,10 +8,11 @@ public class Todo
     public bool IsCompleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+    public DateOnly? DueDate { get; private set; }
 
     private Todo() { }
 
-    public static Todo Create(string title, string description)
+    public static Todo Create(string title, string description = "", DateOnly? dueDate = null)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title cannot be empty", nameof(title));
@@ -22,7 +23,8 @@ public class Todo
             Title = title,
             Description = description ?? string.Empty,
             IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            DueDate = dueDate
         };
     }
 
@@ -44,12 +46,13 @@ public class Todo
         }
     }
 
-    public void UpdateDetails(string title, string description)
+    public void UpdateDetails(string title, string description, DateOnly? dueDate = null)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title cannot be empty", nameof(title));
 
         Title = title;
         Description = description ?? string.Empty;
+        DueDate = dueDate;
     }
 }
