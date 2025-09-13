@@ -42,6 +42,19 @@ public class InMemoryTodoStore
         return removed;
     }
 
+    public bool Toggle(int id)
+    {
+        if (!_byId.TryGetValue(id, out var existing)) return false;
+
+        var updated = existing with { IsDone = !existing.IsDone };
+
+        var index = _items.FindIndex(t => t.Id == id);
+        if (index >= 0) _items[index] = updated;
+
+        _byId[id] = updated;
+        return true;
+    }
+
     /// <summary>
     /// Seed some sample tasks for demos.
     /// </summary>
