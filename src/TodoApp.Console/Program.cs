@@ -1,275 +1,159 @@
-using Microsoft.Extensions.DependencyInjection;
-using TodoApp.Application.DTOs;
-using TodoApp.Application.Interfaces;
+using TodoApp.Domain;
 using TodoApp.Infrastructure;
 
-var services = new ServiceCollection();
-services.AddInfrastructure();
-var serviceProvider = services.BuildServiceProvider();
+Console.WriteLine("== MyTodo Console (Phase 3) ==");
 
-var todoService = serviceProvider.GetRequiredService<ITodoService>();
+// Store + Seed
+var store = new InMemoryTodoStore();
+store.Seed();
 
-// Main loop
-bool exit = false;
-while (!exit)
+while (true)
 {
-    Console.Clear();
-    Console.WriteLine("===== TODO APP =====");
-    Console.WriteLine("1. View all todos");
-    Console.WriteLine("2. Add new todo");
-    Console.WriteLine("3. View todo details");
-    Console.WriteLine("4. Update todo");
-    Console.WriteLine("5. Delete todo");
-    Console.WriteLine("6. Mark todo as completed");
-    Console.WriteLine("7. Mark todo as incomplete");
-    Console.WriteLine("0. Exit");
+    PrintMenu();
+    var choice = Console.ReadLine()?.Trim();
+
+    switch (choice)
+    {
+        case "1":
+            AddFlow();
+            break;
+        case "2":
+            ListFlow();
+            break;
+        case "3":
+            CompleteFlow();
+            break;
+        case "4":
+            ToggleFlow();
+            break;
+        case "5":
+            DeleteFlow();
+            break;
+        case "q":
+        case "Q":
+        case "":
+            Console.WriteLine("Bye!");
+            return;
+        default:
+            Console.WriteLine("Unknown option. Please choose 1–5 or Q to quit.");
+            break;
+    }
+}
+
+// ---------- Actions (small, focused) ----------
+
+void AddFlow()
+{
+    var title = ReadRequired("Title");
+    if (title is null) return; // guard
+
+    var due = ReadOptionalDate("Due date (yyyy-MM-dd, optional)");
+    var created = store.Add(title, due);
+    Console.WriteLine($"Created: [{created.Id}] {created.Title}");
+}
+
+void ListFlow()
+{
     Console.WriteLine();
-    Console.Write("Select an option: ");
-
-    if (int.TryParse(Console.ReadLine(), out int option))
+    Console.WriteLine("Current Todos:");
+    foreach (var t in store.All)
     {
-        Console.WriteLine();
-
-        switch (option)
-        {
-            case 1:
-                await ViewAllTodos();
-                break;
-            case 2:
-                await AddNewTodo();
-                break;
-            case 3:
-                await ViewTodoDetails();
-                break;
-            case 4:
-                await UpdateTodo();
-                break;
-            case 5:
-                await DeleteTodo();
-                break;
-            case 6:
-                await CompleteTodo();
-                break;
-            case 7:
-                await ResetTodo();
-                break;
-            case 0:
-                exit = true;
-                break;
-            default:
-                Console.WriteLine("Invalid option. Press any key to continue...");
-                Console.ReadKey();
-                break;
-        }
-    }
-    else
-    {
-        Console.WriteLine("Invalid input. Press any key to continue...");
-        Console.ReadKey();
+        var status = t.IsDone ? "[x]" : "[ ]";
+        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
+        Console.WriteLine($"{t.Id,2} {status} {t.Title}  (Due: {due})");
     }
 }
 
-async Task ViewAllTodos()
+void CompleteFlow()
 {
-    var todos = await todoService.GetAllTodosAsync();
-    if (!todos.Any())
-    {
-        Console.WriteLine("No todos found.");
-    }
+    var id = ReadInt("Id to complete");
+    if (id is null) return; // guard
+
+    if (store.Complete(id.Value))
+        Console.WriteLine("Completed.");
     else
-    {
-        Console.WriteLine("ID\t\t\t\tTitle\t\tStatus");
-        Console.WriteLine("---------------------------------------------------------------");
-        foreach (var todo in todos)
-        {
-            Console.WriteLine($"{todo.Id}\t{todo.Title}\t{(todo.IsCompleted ? "Completed" : "Pending")}");
-        }
-    }
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+        Console.WriteLine("Not found.");
 }
 
-async Task AddNewTodo()
+void ToggleFlow()
 {
-    Console.Write("Enter title: ");
-    var title = Console.ReadLine() ?? "";
-    
-    Console.Write("Enter description: ");
-    var description = Console.ReadLine() ?? "";
+    var id = ReadInt("Id to toggle");
+    if (id is null) return; // guard
 
-    var createTodoDto = new CreateTodoDto
-    {
-        Title = title,
-        Description = description
-    };
-
-    try
-    {
-        var newTodo = await todoService.CreateTodoAsync(createTodoDto);
-        Console.WriteLine($"Todo created with ID: {newTodo.Id}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-    }
-
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    if (store.Toggle(id.Value))
+        Console.WriteLine("Toggled.");
+    else
+        Console.WriteLine("Not found.");
 }
 
-async Task ViewTodoDetails()
+void DeleteFlow()
 {
-    Console.Write("Enter todo ID: ");
-    if (Guid.TryParse(Console.ReadLine(), out Guid id))
-    {
-        var todo = await todoService.GetTodoByIdAsync(id);
-        if (todo == null)
-        {
-            Console.WriteLine("Todo not found.");
-        }
-        else
-        {
-            Console.WriteLine($"ID: {todo.Id}");
-            Console.WriteLine($"Title: {todo.Title}");
-            Console.WriteLine($"Description: {todo.Description}");
-            Console.WriteLine($"Status: {(todo.IsCompleted ? "Completed" : "Pending")}");
-            Console.WriteLine($"Created: {todo.CreatedAt}");
-            if (todo.CompletedAt.HasValue)
-            {
-                Console.WriteLine($"Completed: {todo.CompletedAt}");
-            }
-        }
-    }
-    else
-    {
-        Console.WriteLine("Invalid ID format.");
-    }
+    var id = ReadInt("Id to delete");
+    if (id is null) return; // guard
 
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    if (!Confirm($"Are you sure you want to delete #{id}? (y/N)")) return;
+
+    if (store.Delete(id.Value))
+        Console.WriteLine("Deleted.");
+    else
+        Console.WriteLine("Not found.");
 }
 
-async Task UpdateTodo()
+// ---------- Helpers (simple and safe) ----------
+
+void PrintMenu()
 {
-    Console.Write("Enter todo ID: ");
-    if (Guid.TryParse(Console.ReadLine(), out Guid id))
-    {
-        var todo = await todoService.GetTodoByIdAsync(id);
-        if (todo == null)
-        {
-            Console.WriteLine("Todo not found.");
-        }
-        else
-        {
-            Console.WriteLine($"Current title: {todo.Title}");
-            Console.Write("Enter new title (leave empty to keep current): ");
-            var title = Console.ReadLine();
-            
-            Console.WriteLine($"Current description: {todo.Description}");
-            Console.Write("Enter new description (leave empty to keep current): ");
-            var description = Console.ReadLine();
-
-            var updateTodoDto = new UpdateTodoDto
-            {
-                Title = string.IsNullOrWhiteSpace(title) ? todo.Title : title,
-                Description = string.IsNullOrWhiteSpace(description) ? todo.Description : description
-            };
-
-            try
-            {
-                var updatedTodo = await todoService.UpdateTodoAsync(id, updateTodoDto);
-                if (updatedTodo != null)
-                {
-                    Console.WriteLine("Todo updated successfully.");
-                }
-                else
-                {
-                    Console.WriteLine("Failed to update todo.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-        }
-    }
-    else
-    {
-        Console.WriteLine("Invalid ID format.");
-    }
-
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    Console.WriteLine();
+    Console.WriteLine("Menu:");
+    Console.WriteLine("1) Add");
+    Console.WriteLine("2) List");
+    Console.WriteLine("3) Complete");
+    Console.WriteLine("4) Toggle");
+    Console.WriteLine("5) Delete");
+    Console.WriteLine("Q) Quit");
+    Console.Write("> ");
 }
 
-async Task DeleteTodo()
+string? ReadRequired(string label)
 {
-    Console.Write("Enter todo ID: ");
-    if (Guid.TryParse(Console.ReadLine(), out Guid id))
+    Console.Write($"{label}: ");
+    var input = Console.ReadLine()?.Trim();
+    if (string.IsNullOrWhiteSpace(input))
     {
-        var result = await todoService.DeleteTodoAsync(id);
-        if (result)
-        {
-            Console.WriteLine("Todo deleted successfully.");
-        }
-        else
-        {
-            Console.WriteLine("Todo not found or could not be deleted.");
-        }
+        Console.WriteLine($"{label} is required.");
+        return null;
     }
-    else
-    {
-        Console.WriteLine("Invalid ID format.");
-    }
-
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    return input;
 }
 
-async Task CompleteTodo()
+int? ReadInt(string label)
 {
-    Console.Write("Enter todo ID: ");
-    if (Guid.TryParse(Console.ReadLine(), out Guid id))
+    Console.Write($"{label}: ");
+    var raw = Console.ReadLine()?.Trim();
+    if (!int.TryParse(raw, out var value))
     {
-        var result = await todoService.CompleteTodoAsync(id);
-        if (result)
-        {
-            Console.WriteLine("Todo marked as completed.");
-        }
-        else
-        {
-            Console.WriteLine("Todo not found or could not be updated.");
-        }
+        Console.WriteLine("Please enter a valid integer.");
+        return null;
     }
-    else
-    {
-        Console.WriteLine("Invalid ID format.");
-    }
-
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    return value;
 }
 
-async Task ResetTodo()
+DateOnly? ReadOptionalDate(string label)
 {
-    Console.Write("Enter todo ID: ");
-    if (Guid.TryParse(Console.ReadLine(), out Guid id))
-    {
-        var result = await todoService.ResetTodoAsync(id);
-        if (result)
-        {
-            Console.WriteLine("Todo marked as incomplete.");
-        }
-        else
-        {
-            Console.WriteLine("Todo not found or could not be updated.");
-        }
-    }
-    else
-    {
-        Console.WriteLine("Invalid ID format.");
-    }
+    Console.Write($"{label}: ");
+    var raw = Console.ReadLine()?.Trim();
+    if (string.IsNullOrWhiteSpace(raw)) return null;
 
-    Console.WriteLine("\nPress any key to continue...");
-    Console.ReadKey();
+    if (DateOnly.TryParse(raw, out var date))
+        return date;
+
+    Console.WriteLine("Invalid date. Ignoring.");
+    return null;
+}
+
+bool Confirm(string prompt)
+{
+    Console.Write(prompt + " ");
+    var ans = Console.ReadLine()?.Trim().ToLowerInvariant();
+    return ans is "y" or "yes";
 }
