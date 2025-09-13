@@ -105,4 +105,7 @@ FakesAssemblies/
 
 # Rider
 .idea/
-*.sln.iml
+*.sln.iml*
+
+# Ignore editor backup files
+*~
