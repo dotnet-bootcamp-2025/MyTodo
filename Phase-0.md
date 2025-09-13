@@ -12,13 +12,17 @@
 - Make sure you fetch the feature branches (see Git-101.md)
 
 ## Steps
-1) **Clone & open**
-   - Open a terminal
-   - Navigate to your workspace (suggested: `C:\Dev\BootCamp`) 
-   - Type the following Git Command to Clone the repo: `git clone https://github.com/dotnet-bootcamp-2025/MyTodo`
-   - Open `MyTodo.sln`
 
-2) **Explore the structure**
+1) ### Change Branch
+Change to the  `Phase_0-Bootstrap_read_run_the_repo` branch:
+```bash
+git checkout Phase_0-Bootstrap_read_run_the_repo
+```
+
+2) ### Open the Solution
+	From Visual Studio or Rider, open `MyTodo.sln`
+
+3) ### Explore the structure
    - `src/TodoApp.Domain` – entities and contracts
    - `src/TodoApp.Application` – use cases / services
    - `src/TodoApp.Infrastructure` – data access, in-memory store (later)
@@ -26,26 +30,27 @@
    - `src/TodoApp.Api` – Minimal API (optional for this phase)
    - `tests/` – unit tests (later)
 
-3) **Run the Console app**
+4) ### Run the Console app
+- **From terminal**:
    ```bash
    cd src/TodoApp.Console
    dotnet run
+   ```
 
-
-- From **Visual Studio**:
+- **From Visual Studio**:
 1. Set `TodoApp.Console` as the startup project and run (right-click).
 2. At the top menu, select `Debug > Start Without Debugging` (or press `Ctrl + F5`).
 
-- From **Rider**:
+- **From Rider**:
 1. Right-click `TodoApp.Console` and select `Run 'TodoApp.Console'`.
 
 
-**(OPTIONAL) Run the API**
+5) ### (OPTIONAL) Run the API
 
-```bash
+   ```bash
    cd ../TodoApp.Api
    dotnet run
-```
+   ```
 
 Open the URL shown in the console to see Swagger
 
@@ -56,17 +61,13 @@ Open the URL shown in the console to see Swagger
 - From **Rider**:
 1. Right-click `TodoApp.Api` and select `Run 'TodoApp.Api'`.
 
-5) Commit dummy changes
-   - Create a new branch named `phase-0-setup` by typing:
-   ```bash
-	git checkout -b phase-0-setup
-   ```
+6) ### Commit dummy changes
    - Add a comment in `Program.cs` at the top like `// Phase 0 setup complete`
    - Commit and push by following these commands:
    ```bash
    git add .
-   git commit -m "m1-00-setup - FirstName LastName"
-   git push --set-upstream origin phase-0-setup
+   git commit -m "Phase_0-Bootstrap_read_run_the_repo - FirstName LastName"
+   git push --set-upstream origin Phase_0-Bootstrap_read_run_the_repo
    ```
 
 ## Acceptance Criteria
