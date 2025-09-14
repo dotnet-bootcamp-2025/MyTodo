@@ -34,13 +34,28 @@ while (true)
         case "5":
             DeleteFlow();
             break;
+        //New (LINQ basics)
+        case "6":
+            SearchFlow();
+            break;
+        case "7":
+            ListPendingFlow();
+            break;
+        case "8":
+            StatsFlow();
+            break;
+        case "9":
+            NextUpFlow();
+            break;
+
+
         case "q":
         case "Q":
         case "":
             Console.WriteLine("Bye!");
             return;
         default:
-            Console.WriteLine("Unknown option. Please choose 1–5 or Q to quit.");
+            Console.WriteLine("Unknown option. Please choose 1–9 or Q to quit.");
             break;
     }
 }
@@ -104,6 +119,81 @@ void DeleteFlow()
         Console.WriteLine("Not found.");
 }
 
+// ---------- New flows (LINQ basics) ----------
+void SearchFlow()
+{
+    var term = ReadRequired("Search term");
+    if (term is null) return; // guard
+    var results = store.All.Where(t => t.Title.Contains(term, StringComparison.OrdinalIgnoreCase));
+    Console.WriteLine();
+    Console.WriteLine($"Search results for \"{term}\":");
+    PrintTodos(results);
+}
+
+void ListPendingFlow()
+{
+    var pending = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
+
+    Console.WriteLine();
+    Console.WriteLine("Pending (sorted by due date):");
+    PrintTodos(pending);
+}
+
+void StatsFlow()
+{
+    var total = store.All.Count();
+    var done = store.All.Count(t => t.IsDone);
+    var pending = total - done;
+
+    var today = DateOnly.FromDateTime(DateTime.Now);
+    var hasOverdue = store.All.Any(t => t.DueDate is { } d && d < today && !t.IsDone);
+    
+    Console.WriteLine();
+    Console.WriteLine("Stats:");
+    Console.WriteLine($"- Total:   {total}");
+    Console.WriteLine($"- Done:    {done}");
+    Console.WriteLine($"- Pending: {pending}");
+    Console.WriteLine($"- Overdue pending exists:   {(hasOverdue ? "Yes" : "No")}");
+}
+
+void NextUpFlow()
+{
+    var nextUp = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
+        .FirstOrDefault();
+
+    Console.WriteLine();
+    if (nextUp is null)
+    {
+        Console.WriteLine("Next up: (none)");
+    }
+    else
+    {
+        Console.WriteLine("Next up:");
+        PrintTodos(new[] { nextUp });
+    }
+}
+
+void PrintTodos(IEnumerable<Todo> items)
+{
+    var any = false;
+    foreach (var t in items)
+    {
+        any = true;
+        var status = t.IsDone ? "[x]" : "[ ]";
+        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
+        Console.WriteLine($"{t.Id,2} {status} {t.Title}  (Due: {due})");
+    }
+    if (!any) 
+    {
+        Console.WriteLine("(no items)");
+    }
+        
+}
+
 // ---------- Helpers (simple and safe) ----------
 
 void PrintMenu()
@@ -115,6 +205,10 @@ void PrintMenu()
     Console.WriteLine("3) Complete");
     Console.WriteLine("4) Toggle");
     Console.WriteLine("5) Delete");
+    Console.WriteLine("6) Search");                //New
+    Console.WriteLine("7) List pending (sorted)"); //New
+    Console.WriteLine("8) Stats");                 //New
+    Console.WriteLine("9) Next up");               //New
     Console.WriteLine("Q) Quit");
     Console.Write("> ");
 }
