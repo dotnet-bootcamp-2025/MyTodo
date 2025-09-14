@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TodoApp.Domain;
+using TodoApp.Application;
 using TodoApp.Infrastructure;
 
-Console.WriteLine("Welcome to the Todo App!");
+Console.WriteLine("== MyTodo Console (Phase 5) ==");
 
-// Store + Seed
-var store = new InMemoryTodoStore();
-store.Seed();
+// Wire up infra + app layers (simple manual wiring for clarity)
+ITodoRepository repo = new InMemoryTodoRepository();
+RepoSeeder.Seed(repo);
+var service = new TodoService(repo);
 
 while (true)
 {
@@ -68,20 +71,22 @@ void AddFlow()
     if (title is null) return; // guard
 
     var due = ReadOptionalDate("Due date (yyyy-MM-dd, optional)");
-    var created = store.Add(title, due);
-    Console.WriteLine($"Created: [{created.Id}] {created.Title}");
+    var result = service.Create(title, due);
+    
+    if (!result.Ok)
+    {
+        Console.WriteLine(result.Error);
+        return;
+    }
+
+    Console.WriteLine($"Created: [{result.Created!.Id}]{result.Created.Title}");
 }
 
 void ListFlow()
 {
     Console.WriteLine();
-    Console.WriteLine("Current Todos:");
-    foreach (var t in store.All)
-    {
-        var status = t.IsDone ? "[x]" : "[ ]";
-        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
-        Console.WriteLine($"{t.Id,2} {status} {t.Title}  (Due: {due})");
-    }
+    Console.WriteLine("All Todos:");
+    PrintTodos(service.ListAll());
 }
 
 void CompleteFlow()
@@ -89,10 +94,8 @@ void CompleteFlow()
     var id = ReadInt("Id to complete");
     if (id is null) return; // guard
 
-    if (store.Complete(id.Value))
-        Console.WriteLine("Completed.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Complete(id.Value);
+    Console.WriteLine(result.Ok ? "Completed." : result.Error);
 }
 
 void ToggleFlow()
@@ -100,55 +103,41 @@ void ToggleFlow()
     var id = ReadInt("Id to toggle");
     if (id is null) return; // guard
 
-    if (store.Toggle(id.Value))
-        Console.WriteLine("Toggled.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Toggle(id.Value);
+    Console.WriteLine(result.Ok ? "Toggled." : result.Error);
 }
 
 void DeleteFlow()
 {
     var id = ReadInt("Id to delete");
     if (id is null) return; // guard
-
     if (!Confirm($"Are you sure you want to delete #{id}? (y/N)")) return;
 
-    if (store.Delete(id.Value))
-        Console.WriteLine("Deleted.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Delete(id.Value);
+    Console.WriteLine(result.Ok ? "Deleted." : result.Error);
 }
 
-// ---------- New flows (LINQ basics) ----------
+// ---------- LINQ flows (unchanged behavior; now via service) ----------
 void SearchFlow()
 {
     var term = ReadRequired("Search term");
     if (term is null) return; // guard
-    var results = store.All.Where(t => t.Title.Contains(term, StringComparison.OrdinalIgnoreCase));
+        
     Console.WriteLine();
     Console.WriteLine($"Search results for \"{term}\":");
-    PrintTodos(results);
+    PrintTodos(service.Search(term));
 }
 
 void ListPendingFlow()
 {
-    var pending = store.All
-        .Where(t => !t.IsDone)
-        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
-
     Console.WriteLine();
     Console.WriteLine("Pending (sorted by due date):");
-    PrintTodos(pending);
+    PrintTodos(service.PendingSorted());
 }
 
 void StatsFlow()
 {
-    var total = store.All.Count();
-    var done = store.All.Count(t => t.IsDone);
-    var pending = total - done;
-
-    var today = DateOnly.FromDateTime(DateTime.Now);
-    var hasOverdue = store.All.Any(t => t.DueDate is { } d && d < today && !t.IsDone);
+    var (total, done, pending, hasOverdue) = service.Stats();
     
     Console.WriteLine();
     Console.WriteLine("Stats:");
@@ -160,10 +149,7 @@ void StatsFlow()
 
 void NextUpFlow()
 {
-    var nextUp = store.All
-        .Where(t => !t.IsDone)
-        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
-        .FirstOrDefault();
+    var nextUp = service.NextUp();
 
     Console.WriteLine();
     if (nextUp is null)
@@ -173,7 +159,7 @@ void NextUpFlow()
     else
     {
         Console.WriteLine("Next up:");
-        PrintTodos(new[] { nextUp });
+        PrintTodos(new[] {nextUp});
     }
 }
 
@@ -249,7 +235,6 @@ DateOnly? ReadOptionalDate(string label)
     Console.WriteLine("Invalid date. Ignoring.");
     return null;
 }
-
 bool Confirm(string prompt)
 {
     Console.Write(prompt + " ");

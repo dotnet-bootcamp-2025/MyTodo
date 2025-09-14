@@ -10,8 +10,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        services.AddSingleton<ITodoRepository, InMemoryTodoRepository>();
-        services.AddScoped<ITodoService, TodoService>();
+        services.AddSingleton<ITodoRepository_Old, InMemoryTodoRepository_Old>();
+        services.AddScoped<ITodoService, TodoService_Old>();
         
         return services;
     }
