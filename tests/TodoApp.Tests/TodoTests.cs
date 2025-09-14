@@ -1,8 +1,7 @@
 using TodoApp.Application.DTOs;
-using TodoApp.Application.Services;
-using TodoApp.Domain.Entities;
-using TodoApp.Domain.Repositories;
-using TodoApp.Infrastructure.Repositories;
+using TodoApp.Application;
+using TodoApp.Domain;
+using TodoApp.Infrastructure;
 
 namespace TodoApp.Tests;
 
