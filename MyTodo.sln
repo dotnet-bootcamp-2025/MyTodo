@@ -33,6 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 - Phases", "01 - Phases"
 		Phase-2.md = Phase-2.md
 		Phase-3.md = Phase-3.md
 		Phase-4.md = Phase-4.md
+		Phase-5.md = Phase-5.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00 - Prerequesites", "00 - Prerequesites", "{D0062774-BA7C-4582-B29D-88BB29A6FA66}"
