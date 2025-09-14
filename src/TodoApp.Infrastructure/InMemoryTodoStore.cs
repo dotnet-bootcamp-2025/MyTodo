@@ -37,6 +37,20 @@ public class InMemoryTodoStore
         return removed;
     }
 
+    public bool Toggle(Guid id)
+    {
+        if (!_byId.TryGetValue(id, out var existing)) return false;
+
+        // Aquí supongo que quieres cambiar el estado de completado.
+        if (existing.IsCompleted)
+            existing.MarkAsIncomplete();
+        else
+            existing.MarkAsCompleted();
+
+        return true;
+    }
+
+
     /// <summary>
     /// Seed some sample tasks for demos.
     /// </summary>
