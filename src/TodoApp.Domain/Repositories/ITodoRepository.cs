@@ -1,7 +1,5 @@
 namespace TodoApp.Domain.Repositories;
 
-using TodoApp.Domain.Entities;
-
 public interface ITodoRepository
 {
     Task<IEnumerable<Todo>> GetAllAsync();
