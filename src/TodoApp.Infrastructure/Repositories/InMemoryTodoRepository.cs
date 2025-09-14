@@ -1,39 +1,57 @@
 namespace TodoApp.Infrastructure.Repositories;
 
 using System.Collections.Concurrent;
-using TodoApp.Domain.Entities;
-using TodoApp.Domain.Repositories;
+using TodoApp.Domain.Phase1;
+//using TodoApp.Domain.Repositories;
+using TodoApp.Domain;
+
 
 public class InMemoryTodoRepository : ITodoRepository
 {
-    private readonly ConcurrentDictionary<Guid, Todo> _todos = new();
+    private readonly List<Todo> _items = new();
+    private readonly Dictionary<int, Todo> _byId = new();
+    private int _nextId = 1;
 
-    public Task<IEnumerable<Todo>> GetAllAsync()
+    public IReadOnlyList<Todo> All => _items;
+
+    public Todo Add(string title, DateOnly? dueDate = null)
     {
-        return Task.FromResult<IEnumerable<Todo>>(_todos.Values.ToList());
+        var todo = new Todo(_nextId++, title, dueDate, false);
+        _items.Add(todo);
+        _byId[todo.Id] = todo;
+        return todo;
     }
 
-    public Task<Todo?> GetByIdAsync(Guid id)
+    public bool TryGet(int id, out Todo todo) => _byId.TryGetValue(id, out todo);
+
+    public bool Complete(int id)
     {
-        _todos.TryGetValue(id, out var todo);
-        return Task.FromResult(todo);
+        if (!_byId.TryGetValue(id, out var existing)) return false;
+        var updated = existing with { IsDone = true };
+
+        var index = _items.FindIndex(t => t.Id == id);
+        if (index >= 0) _items[index] = updated;
+
+        _byId[id] = updated;
+        return true;
     }
 
-    public Task AddAsync(Todo todo)
+    public bool Toggle(int id)
     {
-        _todos.TryAdd(todo.Id, todo);
-        return Task.CompletedTask;
+        if (!_byId.TryGetValue(id, out var existing)) return false;
+        var updated = existing with { IsDone = !existing.IsDone };
+
+        var index = _items.FindIndex(t => t.Id == id);
+        if (index >= 0) _items[index] = updated;
+
+        _byId[id] = updated;
+        return true;
     }
 
-    public Task UpdateAsync(Todo todo)
+    public bool Delete(int id)
     {
-        _todos[todo.Id] = todo;
-        return Task.CompletedTask;
-    }
-
-    public Task DeleteAsync(Guid id)
-    {
-        _todos.TryRemove(id, out _);
-        return Task.CompletedTask;
+        if (!_byId.Remove(id)) return false;
+        var removed = _items.RemoveAll(t => t.Id == id) > 0;
+        return removed;
     }
 }
