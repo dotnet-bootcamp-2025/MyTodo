@@ -1,7 +1,10 @@
-﻿using TodoApp.Domain;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Xml.Serialization;
+using TodoApp.Domain;
 using TodoApp.Infrastructure;
 
-Console.WriteLine("== My Todo App console (Phase 3) ==");
+Console.WriteLine("== My Todo App console (Phase 4) ==");
 
 var store = new InMemoryTodoStore();
 store.Seed();
@@ -9,8 +12,7 @@ store.Seed();
 while (true)
 {
     PrintMenu();
-
-    var choice = Console.ReadLine();
+    var choice = Console.ReadLine()?.Trim();
 
     switch (choice)
     {
@@ -34,6 +36,23 @@ while (true)
             DeleteFlow();
             break;
 
+        // NEW (LINQ basics)
+        case "6":
+            SearchFlow();
+            break;
+
+        case "7":
+            ListPendingFlow();
+            break;
+
+        case "8":
+            StatsFlow();
+            break;
+
+        case "9":
+            NextUpFlow();
+            break;
+
         case "q":
         case "Q":
         case "":
@@ -41,7 +60,7 @@ while (true)
             return;
 
         default:
-            Console.WriteLine("Unknown option. Plesae choose 1-5 or Q to quit.");
+            Console.WriteLine("Unknown option. Plesae choose 1-9 or Q to quit.");
             break;
     }
 }
@@ -50,18 +69,10 @@ while (true)
 
 void AddFlow()
 {
-    Console.WriteLine("Title: ");
-    var title = Console.ReadLine() ?? string.Empty;
+    var title = ReadRequired("Title");
+    if (title is null) return;
 
-    Console.WriteLine("Due date (yyyy-MM-dd, optional): ");
-    var dueText = Console.ReadLine();
-
-    DateOnly? due = null;
-    if (!string.IsNullOrWhiteSpace(dueText) && DateOnly.TryParse(dueText, out var parsed))
-    {
-        due = parsed;
-    }
-
+    var due = ReadoptionalDate("Due date (yyyy-MM-dd, optional): ");
     var created = store.Add(title, due);
 
     Console.WriteLine($"Created: [{created.Id}] {created.Title}");
@@ -70,20 +81,14 @@ void AddFlow()
 void ListFlow()
 {
     Console.WriteLine();
-    Console.WriteLine("Current Todos:");
-
-    foreach (var t in store.All)
-    {
-        var status = t.IsDone ? "[x]" : "[ ]";
-        var due = t.DueDate?.ToString("yyyy-MM-dd") == "-";
-        Console.WriteLine($"{t.Id,2}) {status} {t.Title} (Due: {due}) ");
-    }
+    Console.WriteLine("All Todos:");
+    PrintTodos(store.All);
 }
 
 void CompleteFlow()
 {
     var id = ReadInt("Id to complete");
-    if (id is null) return; //guard change
+    if (id is null) return;
 
     if (store.Complete(id.Value))
         Console.WriteLine("Completed");
@@ -105,7 +110,7 @@ void DeleteFlow()
 {
     var id = ReadInt("Id to Delete");
 
-    if (id is null) return; // guard change
+    if (id is null) return;
 
     if (!Confirn($"Are you sure you want to delete #{id}? (y/N)")) return;
 
@@ -113,6 +118,69 @@ void DeleteFlow()
         Console.WriteLine("Deleted!");
     else
         Console.WriteLine("Not found!");
+}
+
+// ---------------- NEW: LINQ flows -----------------------
+
+void SearchFlow()
+{
+    var term = ReadRequired("Search term");
+    if (term is null) return;
+
+    var results = store.All
+        .Where(t => t.Title.Contains(term, StringComparison.OrdinalIgnoreCase));
+
+    Console.WriteLine();
+    Console.WriteLine($"Search results for \"{term}\":");
+
+    PrintTodos(results);
+}
+
+void ListPendingFlow()
+{
+    var pending = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
+
+    Console.WriteLine();
+    Console.WriteLine("Pending (sorted by due date): ");
+    PrintTodos(pending);
+}
+
+void StatsFlow()
+{
+    var total       = store.All.Count;
+    var done        = store.All.Count(t => t.IsDone);
+    var pending     = total - done;
+
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var hasOverdue = store.All.Any(t => t.DueDate is { } d && d < today && !t.IsDone);
+
+    Console.WriteLine();
+    Console.WriteLine("Stats:");
+    Console.WriteLine($"- Total:    {total}");
+    Console.WriteLine($"- Done:     {done}");
+    Console.WriteLine($"- Pending:  {pending}");
+    Console.WriteLine($"- Overdue pending exists: {(hasOverdue ? "Yes" : "No")}");
+}
+
+void NextUpFlow()
+{
+    var nextUp = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
+        .FirstOrDefault();
+
+    Console.WriteLine();
+    if (nextUp is null)
+    {
+        Console.WriteLine("Next up: (done)");
+    }
+    else
+    {
+        Console.WriteLine("Next up:");
+        PrintTodos(new[] { nextUp });
+    }
 }
 
 //------------------ Helpers (simple, safe) ------------------
@@ -126,6 +194,10 @@ void PrintMenu()
     Console.WriteLine("3) Complete");
     Console.WriteLine("4) Toggle");
     Console.WriteLine("5) Delete");
+    Console.WriteLine("6) Search");                 //NEW
+    Console.WriteLine("7) List pending (sorted)");  //NEW
+    Console.WriteLine("8) Stats");                  //NEW
+    Console.WriteLine("9) Next up");                //NEW
     Console.WriteLine("Q) Quit");
     Console.WriteLine("> ");
 }
@@ -146,7 +218,7 @@ string? ReadRequired(string label)
 
 int? ReadInt(string label)
 {
-    Console.WriteLine($"{label}");
+    Console.WriteLine($"{label}: ");
     var raw = Console.ReadLine()?.Trim();
     
     if (!int.TryParse(raw, out var value))
@@ -179,3 +251,23 @@ bool Confirn(string prompt)
 
     return ans is "y" or "yes";
 }
+
+// new helper to print results
+void PrintTodos(IEnumerable<Todo> items)
+{
+    var any = false;
+
+    foreach(var t in items)
+    {
+        any = true;
+        var status = t.IsDone ? "[x]" : "[ ]";
+        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
+        Console.WriteLine($"{t.Id} {status} {t.Title} (Due: {due})");
+    }
+
+    if (!any)
+    {
+        Console.WriteLine("(No items)");
+    }
+}
+
