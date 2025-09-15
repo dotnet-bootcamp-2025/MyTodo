@@ -1,13 +1,15 @@
 using System.Linq;
+using TodoApp.Application;
 using TodoApp.Domain;
 using TodoApp.Domain.Entities;
 using TodoApp.Infrastructure;
 
-Console.WriteLine("== MyTodo Console (Phase 4) ==");
+Console.WriteLine("== MyTodo Console (Phase 5) ==");
 
-// Store + Seed
-var store = new InMemoryTodoStore();
-store.Seed();
+// Wire up infra + app layers (simple manual wiring for clarity)
+ITodoRepository repo = new InMemoryTodoRepository();
+RepoSeeder.Seed(repo);
+var service = new TodoService(repo);
 
 while (true)
 {
@@ -32,7 +34,6 @@ while (true)
             DeleteFlow();
             break;
 
-        // NEW (LINQ basics)
         case "6":
             SearchFlow();
             break;
@@ -57,96 +58,101 @@ while (true)
     }
 }
 
-// ---------- Actions (small, focused) ----------
+// ---------- Actions (call service; keep UI thin) ----------
 
 void AddFlow()
 {
     var title = ReadRequired("Title");
     if (title is null) return;
 
-    var desc = ""; // puedes pedir descripción si lo deseas
     var due = ReadOptionalDate("Due date (yyyy-MM-dd, optional)");
-    var created = store.Add(title, desc, due);
-    Console.WriteLine($"Created: [{created.Id}] {created.Title}");
+    var result = service.Create(title, due);
+
+    if (!result.Ok)
+    {
+        Console.WriteLine(result.Error);
+        return;
+    }
+
+    Console.WriteLine($"Created: [{result.Created!.Id}] {result.Created.Title}");
 }
 
 void ListFlow()
 {
     Console.WriteLine();
     Console.WriteLine("All Todos:");
-    PrintTodos(store.All);
+    PrintTodos(service.ListAll());
 }
+
+// Modifica los métodos de flujo en tu archivo de programa principal
 
 void CompleteFlow()
 {
-    var id = ReadGuid("Id to complete");
+    var id = ReadGuid("Id to complete"); // Usar un nuevo método para leer Guid
     if (id is null) return;
 
-    if (store.Complete(id.Value))
-        Console.WriteLine("Completed.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Complete(id.Value);
+    Console.WriteLine(result.Ok ? "Completed." : result.Error);
 }
 
 void ToggleFlow()
 {
-    var id = ReadGuid("Id to toggle");
+    var id = ReadGuid("Id to toggle"); // Usar un nuevo método para leer Guid
     if (id is null) return;
 
-    if (store.Toggle(id.Value))
-        Console.WriteLine("Toggled.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Toggle(id.Value);
+    Console.WriteLine(result.Ok ? "Toggled." : result.Error);
 }
 
 void DeleteFlow()
 {
-    var id = ReadGuid("Id to delete");
+    var id = ReadGuid("Id to delete"); // Usar un nuevo método para leer Guid
     if (id is null) return;
-
     if (!Confirm($"Are you sure you want to delete #{id}? (y/N)")) return;
 
-    if (store.Delete(id.Value))
-        Console.WriteLine("Deleted.");
-    else
-        Console.WriteLine("Not found.");
+    var result = service.Delete(id.Value);
+    Console.WriteLine(result.Ok ? "Deleted." : result.Error);
 }
 
-// ---------- NEW: LINQ flows ----------
+// Añade este nuevo método auxiliar
+
+Guid? ReadGuid(string label)
+{
+    Console.Write($"{label}: ");
+    var raw = Console.ReadLine()?.Trim();
+    if (string.IsNullOrWhiteSpace(raw)) return null;
+
+    if (Guid.TryParse(raw, out var value))
+    {
+        return value;
+    }
+
+    Console.WriteLine("Please enter a valid Guid.");
+    return null;
+}
+
+// ---------- LINQ flows (unchanged behavior; now via service) ----------
 
 void SearchFlow()
 {
     var term = ReadRequired("Search term");
     if (term is null) return;
 
-    var results = store.All
-        .Where(t => t.Title.Contains(term, StringComparison.OrdinalIgnoreCase));
-
     Console.WriteLine();
     Console.WriteLine($"Search results for \"{term}\":");
-    PrintTodos(results);
+    PrintTodos(service.Search(term));
 }
 
 void ListPendingFlow()
 {
-    var pending = store.All
-        .Where(t => !t.IsCompleted)
-        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
-
     Console.WriteLine();
     Console.WriteLine("Pending (sorted by due date):");
-    PrintTodos(pending);
+    PrintTodos(service.PendingSorted());
 }
 
 void StatsFlow()
 {
-    var total = store.All.Count;
-    var done = store.All.Count(t => t.IsCompleted);
-    var pending = total - done;
-
-    var today = DateOnly.FromDateTime(DateTime.Today);
-    var hasOverdue = store.All.Any(t =>
-        t.DueDate is { } d && d < today && !t.IsCompleted);
+    var (total, done, pending, hasOverdue) = service.Stats();
 
     Console.WriteLine();
     Console.WriteLine("Stats:");
@@ -158,10 +164,7 @@ void StatsFlow()
 
 void NextUpFlow()
 {
-    var nextUp = store.All
-        .Where(t => !t.IsCompleted)
-        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
-        .FirstOrDefault();
+    var nextUp = service.NextUp();
 
     Console.WriteLine();
     if (nextUp is null)
@@ -175,7 +178,7 @@ void NextUpFlow()
     }
 }
 
-// ---------- Helpers (simple and safe) ----------
+// ---------- Helpers (same as before) ----------
 
 void PrintMenu()
 {
@@ -186,10 +189,10 @@ void PrintMenu()
     Console.WriteLine("3) Complete");
     Console.WriteLine("4) Toggle");
     Console.WriteLine("5) Delete");
-    Console.WriteLine("6) Search");                 // NEW
-    Console.WriteLine("7) List Pending (sorted)");  // NEW
-    Console.WriteLine("8) Stats");                  // NEW
-    Console.WriteLine("9) Next Up");                // NEW
+    Console.WriteLine("6) Search");
+    Console.WriteLine("7) List Pending (sorted)");
+    Console.WriteLine("8) Stats");
+    Console.WriteLine("9) Next Up");
     Console.WriteLine("Q) Quit");
     Console.Write("> ");
 }
@@ -202,7 +205,7 @@ void PrintTodos(IEnumerable<Todo> items)
         any = true;
         var status = t.IsCompleted ? "[x]" : "[ ]";
         var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
-        Console.WriteLine($"{t.Id} {status} {t.Title}  (Due: {due})");
+        Console.WriteLine($"{t.Id,2} {status} {t.Title}  (Due: {due})");
     }
     if (!any)
     {
@@ -222,13 +225,13 @@ string? ReadRequired(string label)
     return input;
 }
 
-Guid? ReadGuid(string label)
+int? ReadInt(string label)
 {
     Console.Write($"{label}: ");
     var raw = Console.ReadLine()?.Trim();
-    if (!Guid.TryParse(raw, out var value))
+    if (!int.TryParse(raw, out var value))
     {
-        Console.WriteLine("Please enter a valid GUID.");
+        Console.WriteLine("Please enter a valid integer.");
         return null;
     }
     return value;
