@@ -1,6 +1,6 @@
 namespace TodoApp.Domain.Entities;
 
-public class Todo
+public class Todo_old
 {
     public Guid Id { get; private set; }
     public string Title { get; private set; }
@@ -9,14 +9,14 @@ public class Todo
     public DateTime CreatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
 
-    private Todo() { }
+    private Todo_old() { }
 
-    public static Todo Create(string title, string description)
+    public static Todo_old Create(string title, string description)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Title cannot be empty", nameof(title));
 
-        return new Todo
+        return new Todo_old
         {
             Id = Guid.NewGuid(),
             Title = title,
