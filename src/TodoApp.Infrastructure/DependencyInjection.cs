@@ -1,4 +1,6 @@
-namespace TodoApp.Infrastructure;
+// # Phase 2 — Data Structures & Seeding (In-Memory Store) (Commented, not in use for the moment)
+
+/*namespace TodoApp.Infrastructure;
 
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.Interfaces;
@@ -15,4 +17,4 @@ public static class DependencyInjection
         
         return services;
     }
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 namespace TodoApp.Domain.Entities;
 
 public class Todo
@@ -52,4 +53,13 @@ public class Todo
         Title = title;
         Description = description ?? string.Empty;
     }
-}
+}*/
+namespace TodoApp.Domain;
+
+//# Phase 1 — C# Syntax & Variables & Loops (Console I/O + Todo entity) (Completed)
+public record Todo(
+    int Id,
+    string Title,
+    DateOnly? DueDate,
+    bool IsDone = false
+);

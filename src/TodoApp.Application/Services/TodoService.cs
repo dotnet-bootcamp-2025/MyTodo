@@ -1,5 +1,7 @@
 namespace TodoApp.Application.Services;
+// # Phase 2 — Data Structures & Seeding (In-Memory Store) (Commented, not in use for the moment)
 
+/*
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Domain.Entities;
@@ -88,4 +90,4 @@ public class TodoService : ITodoService
             CompletedAt = todo.CompletedAt
         };
     }
-}
+}*/
