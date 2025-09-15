@@ -1,4 +1,3 @@
-using TodoApp.Application.DTOs;
 using TodoApp.Application;
 using TodoApp.Domain;
 using TodoApp.Infrastructure;
@@ -17,85 +16,134 @@ public class TodoTests
     }
 
     [Fact]
-    public async Task CreateTodo_WithValidData_ShouldCreateTodo()
+    public void Create_WithValidTitle_ShouldCreateTodo()
     {
         // Arrange
-        var createDto = new CreateTodoDto
-        {
-            Title = "Test Todo",
-            Description = "Test Description"
-        };
+        var title = "Test Todo";
+        var dueDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
 
         // Act
-        var result = await _service.CreateTodoAsync(createDto);
+        var (ok, error, created) = _service.Create(title, dueDate);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(createDto.Title, result.Title);
-        Assert.Equal(createDto.Description, result.Description);
-        Assert.False(result.IsCompleted);
-        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.NotNull(created);
+        Assert.Equal(title, created.Title);
+        Assert.Equal(dueDate, created.DueDate);
+        Assert.False(created.IsDone);
     }
 
     [Fact]
-    public async Task GetAllTodos_ShouldReturnAllTodos()
+    public void Create_WithEmptyTitle_ShouldReturnError()
     {
-        // Arrange
-        await _service.CreateTodoAsync(new CreateTodoDto { Title = "Todo 1", Description = "Desc 1" });
-        await _service.CreateTodoAsync(new CreateTodoDto { Title = "Todo 2", Description = "Desc 2" });
-
         // Act
-        var result = await _service.GetAllTodosAsync();
+        var (ok, error, created) = _service.Create("", null);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count());
+        Assert.False(ok);
+        Assert.Equal("Title is required.", error);
+        Assert.Null(created);
     }
 
     [Fact]
-    public async Task GetTodoById_WithValidId_ShouldReturnTodo()
+    public void ListAll_ShouldReturnAllTodos()
     {
         // Arrange
-        var todo = await _service.CreateTodoAsync(new CreateTodoDto { Title = "Test Todo", Description = "Desc" });
+        _service.Create("Todo 1", null);
+        _service.Create("Todo 2", null);
 
         // Act
-        var result = await _service.GetTodoByIdAsync(todo.Id);
+        var result = _service.ListAll();
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(todo.Id, result.Id);
-        Assert.Equal(todo.Title, result.Title);
+        Assert.Equal(2, result.Count);
     }
 
     [Fact]
-    public async Task CompleteTodo_ShouldMarkTodoAsCompleted()
+    public void Complete_WithValidId_ShouldMarkAsCompleted()
     {
         // Arrange
-        var todo = await _service.CreateTodoAsync(new CreateTodoDto { Title = "Test Todo", Description = "Desc" });
+        var (_, _, todo) = _service.Create("Test Todo", null);
 
         // Act
-        var completed = await _service.CompleteTodoAsync(todo.Id);
-        var result = await _service.GetTodoByIdAsync(todo.Id);
+        var (ok, error) = _service.Complete(todo!.Id);
 
         // Assert
-        Assert.True(completed);
-        Assert.NotNull(result);
-        Assert.True(result.IsCompleted);
-        Assert.NotNull(result.CompletedAt);
+        Assert.True(ok);
+        Assert.Null(error);
+        
+        var completed = _repository.All.First(t => t.Id == todo.Id);
+        Assert.True(completed.IsDone);
     }
 
     [Fact]
-    public async Task DeleteTodo_WithValidId_ShouldRemoveTodo()
+    public void Toggle_ShouldFlipCompletionStatus()
     {
         // Arrange
-        var todo = await _service.CreateTodoAsync(new CreateTodoDto { Title = "Test Todo", Description = "Desc" });
+        var (_, _, todo) = _service.Create("Test Todo", null);
 
-        // Act
-        var deleted = await _service.DeleteTodoAsync(todo.Id);
-        var todos = await _service.GetAllTodosAsync();
+        // Act - Toggle to complete
+        var (ok1, _) = _service.Toggle(todo!.Id);
+        var afterFirst = _repository.All.First(t => t.Id == todo.Id);
+
+        // Act - Toggle back to incomplete
+        var (ok2, _) = _service.Toggle(todo.Id);
+        var afterSecond = _repository.All.First(t => t.Id == todo.Id);
 
         // Assert
-        Assert.True(deleted);
-        Assert.Empty(todos);
+        Assert.True(ok1);
+        Assert.True(afterFirst.IsDone);
+        Assert.True(ok2);
+        Assert.False(afterSecond.IsDone);
+    }
+
+    [Fact]
+    public void Delete_WithValidId_ShouldRemoveTodo()
+    {
+        // Arrange
+        var (_, _, todo) = _service.Create("Test Todo", null);
+
+        // Act
+        var (ok, error) = _service.Delete(todo!.Id);
+
+        // Assert
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.Empty(_service.ListAll());
+    }
+
+    [Fact]
+    public void Search_ShouldFindMatchingTodos()
+    {
+        // Arrange
+        _service.Create("Buy milk", null);
+        _service.Create("Call mechanic", null);
+        _service.Create("Buy bread", null);
+
+        // Act
+        var results = _service.Search("buy");
+
+        // Assert
+        Assert.Equal(2, results.Count());
+        Assert.All(results, t => t.Title.Contains("Buy", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Stats_ShouldReturnCorrectCounts()
+    {
+        // Arrange
+        var (_, _, todo1) = _service.Create("Todo 1", null);
+        var (_, _, todo2) = _service.Create("Todo 2", null);
+        _service.Complete(todo1!.Id);
+
+        // Act
+        var (total, done, pending, hasOverdue) = _service.Stats();
+
+        // Assert
+        Assert.Equal(2, total);
+        Assert.Equal(1, done);
+        Assert.Equal(1, pending);
     }
 }
