@@ -3,7 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Infrastructure;
-
+using TodoApp.Domain.Entities;
+/*
 var services = new ServiceCollection();
 services.AddInfrastructure();
 var serviceProvider = services.BuildServiceProvider();
@@ -273,4 +274,28 @@ async Task ResetTodo()
 
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
+}*/
+
+//# Phase 1 — C# Syntax & Variables & Loops (Console I/O + Todo entity) (Completed)
+
+Console.WriteLine("=== MyTodo Console ===");
+Console.WriteLine("Type a task title and press Enter (or just Enter to exit):");
+
+var id = 1;
+while (true)
+{
+    Console.Write("> ");
+    var input = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(input))
+        break;
+
+    // explicit type for clarity
+    Todo newTodo = new(id++, input, null, false);
+
+    // 'var' id fine when the type is obvious from the RHS:
+    var message = $"Created: [{newTodo.Id}] {newTodo.Title}";
+    Console.WriteLine(message);
 }
+
+Console.WriteLine("Bye!");
