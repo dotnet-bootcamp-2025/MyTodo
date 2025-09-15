@@ -5,11 +5,11 @@ using TodoApp.Application.Interfaces;
 using TodoApp.Domain.Entities;
 using TodoApp.Domain.Repositories;
 
-public class TodoService : ITodoService
+public class TodoService_Old : ITodoService
 {
-    private readonly ITodoRepository _todoRepository;
+    private readonly ITodoRepository_Old _todoRepository;
 
-    public TodoService(ITodoRepository todoRepository)
+    public TodoService_Old(ITodoRepository_Old todoRepository)
     {
         _todoRepository = todoRepository;
     }

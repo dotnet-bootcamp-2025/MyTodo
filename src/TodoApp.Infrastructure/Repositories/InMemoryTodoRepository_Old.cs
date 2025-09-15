@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using TodoApp.Domain.Entities;
 using TodoApp.Domain.Repositories;
 
-public class InMemoryTodoRepository : ITodoRepository
+public class InMemoryTodoRepository_Old : ITodoRepository_Old
 {
     private readonly ConcurrentDictionary<Guid, Todo_Old> _todos = new();
 

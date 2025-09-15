@@ -8,13 +8,13 @@ namespace TodoApp.Tests;
 
 public class TodoTests
 {
-    private readonly ITodoRepository _repository;
-    private readonly TodoService _service;
+    private readonly ITodoRepository_Old _repository;
+    private readonly TodoService_Old _service;
 
     public TodoTests()
     {
-        _repository = new InMemoryTodoRepository();
-        _service = new TodoService(_repository);
+        _repository = new InMemoryTodoRepository_Old();
+        _service = new TodoService_Old(_repository);
     }
 
     [Fact]

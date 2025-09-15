@@ -2,7 +2,7 @@
 
 namespace TodoApp.Infrastructure;
 
-public class InMemoryTodoStore
+public class InMemoryTodoRepository : ITodoRepository
 {
     private readonly List<Todo> _items = new();
     private readonly Dictionary<int, Todo> _byId = new();
@@ -35,13 +35,6 @@ public class InMemoryTodoStore
         return true;
     }
 
-    public bool Delete(int id)
-    {
-        if (!_byId.Remove(id)) return false;
-        var removed = _items.RemoveAll(t => t.Id == id) > 0;
-        return removed;
-    }
-
     public bool Toggle(int id)
     {
         if (!_byId.TryGetValue(id, out var existing)) return false;
@@ -55,14 +48,10 @@ public class InMemoryTodoStore
         return true;
     }
 
-
-    /// <summary>
-    /// Seed some sample tasks for demos.
-    /// </summary>
-    public void Seed()
+    public bool Delete(int id)
     {
-        Add("Buy milk", DateOnly.FromDateTime(DateTime.Today.AddDays(1)));
-        Add("Finish Module 1 notes", DateOnly.FromDateTime(DateTime.Today.AddDays(2)));
-        Add("Call the mechanic");
+        if (!_byId.Remove(id)) return false;
+        var removed = _items.RemoveAll(t => t.Id == id) > 0;
+        return removed;
     }
 }

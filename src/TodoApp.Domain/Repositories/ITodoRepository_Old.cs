@@ -2,7 +2,7 @@ namespace TodoApp.Domain.Repositories;
 
 using TodoApp.Domain.Entities;
 
-public interface ITodoRepository
+public interface ITodoRepository_Old
 {
     Task<IEnumerable<Todo_Old>> GetAllAsync();
     Task<Todo_Old?> GetByIdAsync(Guid id);
