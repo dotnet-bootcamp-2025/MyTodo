@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,17 +57,5 @@ public class InMemoryTodoStore
         Add("Finish Module 1 notes", DateOnly.FromDateTime(DateTime.Today.AddDays(2)));
         Add("Call the mechanic");
     }
-
-public bool Toggle(int id)
-    {
-        if (!_byId.TryGetValue(id, out var existing)) return false;
-
-        var updated = existing with { IsDone = !existing.IsDone };
-
-        var index = _items.FindIndex(t => t.Id == id);
-        if (index >= 0) _items[index] = updated;
-
-        _byId[id] = updated;
-        return true;
-    }
 }
+*/
