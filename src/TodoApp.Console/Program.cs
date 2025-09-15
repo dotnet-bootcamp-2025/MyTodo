@@ -1,10 +1,11 @@
 // Phase 0 setup complete
+
+/*
 using Microsoft.Extensions.DependencyInjection;
 using TodoApp.Application.DTOs;
 using TodoApp.Application.Interfaces;
 using TodoApp.Infrastructure;
-using TodoApp.Domain.Entities;
-/*
+
 var services = new ServiceCollection();
 services.AddInfrastructure();
 var serviceProvider = services.BuildServiceProvider();
@@ -275,8 +276,9 @@ async Task ResetTodo()
     Console.WriteLine("\nPress any key to continue...");
     Console.ReadKey();
 }*/
-
 //# Phase 1 — C# Syntax & Variables & Loops (Console I/O + Todo entity) (Completed)
+/*
+using TodoApp.Domain;
 
 Console.WriteLine("=== MyTodo Console ===");
 Console.WriteLine("Type a task title and press Enter (or just Enter to exit):");
@@ -299,3 +301,87 @@ while (true)
 }
 
 Console.WriteLine("Bye!");
+*/
+
+// # Phase 2 — Data Structures & Seeding (In-Memory Store)
+using TodoApp.Domain;
+using TodoApp.Infrastructure;
+
+Console.WriteLine("== MyTodo Console (Phase 2) ==");
+
+var store = new InMemoryTodoStore();
+store.Seed();
+
+PrintAll();
+
+while (true)
+{
+    Console.WriteLine();
+    Console.WriteLine("Menu:");
+    Console.WriteLine("1) Add");
+    Console.WriteLine("2) List");
+    Console.WriteLine("3) Complete");
+    Console.WriteLine("4) Delete");
+    Console.WriteLine("Enter to exit");
+    Console.Write("> ");
+
+    var choice = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(choice)) break;
+
+    if (choice == "1")
+    {
+        Console.Write("Title: ");
+        var title = Console.ReadLine() ?? string.Empty;
+
+        Console.Write("Due date (yyyy-MM-dd, optional): ");
+        var dueText = Console.ReadLine();
+
+        DateOnly? due = null;
+        if (!string.IsNullOrWhiteSpace(dueText) &&
+            DateOnly.TryParse(dueText, out var parsed))
+        {
+            due = parsed;
+        }
+
+        var created = store.Add(title, due);
+        Console.WriteLine($"Created: [{created.Id}] {created.Title}");
+    }
+    else if (choice == "2")
+    {
+        PrintAll();
+    }
+    else if (choice == "3")
+    {
+        Console.Write("Id to complete: ");
+        if (int.TryParse(Console.ReadLine(), out var id) && store.Complete(id))
+            Console.WriteLine("Completed.");
+        else
+            Console.WriteLine("Not found.");
+    }
+    else if (choice == "4")
+    {
+        Console.Write("Id to delete: ");
+        if (int.TryParse(Console.ReadLine(), out var id) && store.Delete(id))
+            Console.WriteLine("Deleted.");
+        else
+            Console.WriteLine("Not found.");
+    }
+    else
+    {
+        Console.WriteLine("Unknown option.");
+    }
+}
+
+Console.WriteLine("Bye!");
+
+void PrintAll()
+{
+    Console.WriteLine();
+    Console.WriteLine("Current Todos:");
+    foreach (var t in store.All)
+    {
+        var status = t.IsDone ? "[x]" : "[ ]";
+        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
+        Console.WriteLine($"{t.Id,2} {status} {t.Title}  (Due: {due})");
+    }
+}
