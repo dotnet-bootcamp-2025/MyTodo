@@ -1,91 +1,85 @@
-namespace TodoApp.Application.Services;
+using System.Linq;
+using TodoApp.Domain;
 
-using TodoApp.Application.DTOs;
-using TodoApp.Application.Interfaces;
-using TodoApp.Domain.Entities;
-using TodoApp.Domain.Repositories;
+namespace TodoApp.Application;
 
-public class TodoService : ITodoService
+public sealed class TodoService
 {
-    private readonly ITodoRepository _todoRepository;
+    private readonly ITodoRepository _repo;
 
-    public TodoService(ITodoRepository todoRepository)
+    public TodoService(ITodoRepository repo)
     {
-        _todoRepository = todoRepository;
+        _repo = repo;
     }
 
-    public async Task<IEnumerable<TodoDto>> GetAllTodosAsync()
+    // ---------- Commands ----------
+
+    public (bool Ok, string? Error, Todo? Created) Create(string? title, DateOnly? due)
     {
-        var todos = await _todoRepository.GetAllAsync();
-        return todos.Select(MapToDto);
+        if (string.IsNullOrWhiteSpace(title))
+            return (false, "Title is required.", null);
+
+        var created = _repo.Add(title.Trim(), due);
+        return (true, null, created);
     }
 
-    public async Task<TodoDto?> GetTodoByIdAsync(Guid id)
+    public (bool Ok, string? Error) Complete(int id)
     {
-        var todo = await _todoRepository.GetByIdAsync(id);
-        return todo != null ? MapToDto(todo) : null;
+        return _repo.Complete(id)
+            ? (true, null)
+            : (false, "Not found.");
     }
 
-    public async Task<TodoDto> CreateTodoAsync(CreateTodoDto createTodoDto)
+    public (bool Ok, string? Error) Toggle(int id)
     {
-        var todo = Todo.Create(createTodoDto.Title, createTodoDto.Description);
-        await _todoRepository.AddAsync(todo);
-        return MapToDto(todo);
+        return _repo.Toggle(id)
+            ? (true, null)
+            : (false, "Not found.");
     }
 
-    public async Task<TodoDto?> UpdateTodoAsync(Guid id, UpdateTodoDto updateTodoDto)
+    public (bool Ok, string? Error) Delete(int id)
     {
-        var existingTodo = await _todoRepository.GetByIdAsync(id);
-        if (existingTodo == null)
-            return null;
-
-        existingTodo.UpdateDetails(updateTodoDto.Title, updateTodoDto.Description);
-        await _todoRepository.UpdateAsync(existingTodo);
-        return MapToDto(existingTodo);
+        return _repo.Delete(id)
+            ? (true, null)
+            : (false, "Not found.");
     }
 
-    public async Task<bool> DeleteTodoAsync(Guid id)
-    {
-        var existingTodo = await _todoRepository.GetByIdAsync(id);
-        if (existingTodo == null)
-            return false;
+    // ---------- Queries (LINQ on repo.All) ----------
 
-        await _todoRepository.DeleteAsync(id);
-        return true;
+    public IReadOnlyList<Todo> ListAll() => _repo.All;
+
+    public IEnumerable<Todo> Search(string term)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return Enumerable.Empty<Todo>();
+        return _repo.All.Where(t => t.Title.Contains(term,
+            StringComparison.OrdinalIgnoreCase));
     }
 
-    public async Task<bool> CompleteTodoAsync(Guid id)
+    public IEnumerable<Todo> PendingSorted()
     {
-        var existingTodo = await _todoRepository.GetByIdAsync(id);
-        if (existingTodo == null)
-            return false;
-
-        existingTodo.MarkAsCompleted();
-        await _todoRepository.UpdateAsync(existingTodo);
-        return true;
+        return _repo.All
+            .Where(t => !t.IsDone)
+            .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
     }
 
-    public async Task<bool> ResetTodoAsync(Guid id)
+    public (int total, int done, int pending, bool hasOverdue) Stats()
     {
-        var existingTodo = await _todoRepository.GetByIdAsync(id);
-        if (existingTodo == null)
-            return false;
+        var total = _repo.All.Count;
+        var done = _repo.All.Count(t => t.IsDone);
+        var pending = total - done;
 
-        existingTodo.MarkAsIncomplete();
-        await _todoRepository.UpdateAsync(existingTodo);
-        return true;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var hasOverdue = _repo.All.Any(t =>
+            t.DueDate is { } d && d < today && !t.IsDone);
+
+        return (total, done, pending, hasOverdue);
     }
 
-    private static TodoDto MapToDto(Todo todo)
+    public Todo? NextUp()
     {
-        return new TodoDto
-        {
-            Id = todo.Id,
-            Title = todo.Title,
-            Description = todo.Description,
-            IsCompleted = todo.IsCompleted,
-            CreatedAt = todo.CreatedAt,
-            CompletedAt = todo.CompletedAt
-        };
+        return _repo.All
+            .Where(t => !t.IsDone)
+            .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
+            .FirstOrDefault();
     }
 }
