@@ -1,15 +1,14 @@
-﻿using System.Linq;
+﻿/*
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Xml.Serialization;
 using TodoApp.Domain;
-using TodoApp.Application;
 using TodoApp.Infrastructure;
 
-Console.WriteLine("== My Todo App console (Phase 5) ==");
+Console.WriteLine("== My Todo App console (Phase 4) ==");
 
-// connect infra + app layers (simple manual wiring for clarity)
-ITodoRepository repo = new InMemoryTodoRepository();
-RepoSeeder.Seed(repo);
-var service = new TodoService(repo);
-
+var store = new InMemoryTodoStore();
+store.Seed();
 
 while (true)
 {
@@ -38,6 +37,7 @@ while (true)
             DeleteFlow();
             break;
 
+        // NEW (LINQ basics)
         case "6":
             SearchFlow();
             break;
@@ -74,22 +74,16 @@ void AddFlow()
     if (title is null) return;
 
     var due = ReadoptionalDate("Due date (yyyy-MM-dd, optional): ");
-    var result = service.Create(title, due);
+    var created = store.Add(title, due);
 
-    if (!result.Ok)
-    {
-        Console.WriteLine(result.Error);
-        return;
-    }
-
-    Console.WriteLine($"Created: [{result.Created!.Id}] {result.Created.Title}");
+    Console.WriteLine($"Created: [{created.Id}] {created.Title}");
 }
 
 void ListFlow()
 {
     Console.WriteLine();
     Console.WriteLine("All Todos:");
-    PrintTodos(service.ListAll());
+    PrintTodos(store.All);
 }
 
 void CompleteFlow()
@@ -97,18 +91,20 @@ void CompleteFlow()
     var id = ReadInt("Id to complete");
     if (id is null) return;
 
-    var result = service.Complete(id.Value);
-
-    Console.WriteLine(result.Ok ? "Completed" : result.Error);
+    if (store.Complete(id.Value))
+        Console.WriteLine("Completed");
+    else
+        Console.WriteLine("Not found");
 }
 
 void ToggleFlow()
 {
     var id = ReadInt("Id to complete");
-    if(id is null) return;
 
-    var result = service.Toggle(id.Value);
-    Console.WriteLine(result.Ok ? "Toggled" : result.Error);
+    if (store.Toggle(id.Value))
+        Console.WriteLine("Toggled");
+    else
+        Console.WriteLine("Not found");
 }
 
 void DeleteFlow()
@@ -119,32 +115,47 @@ void DeleteFlow()
 
     if (!Confirn($"Are you sure you want to delete #{id}? (y/N)")) return;
 
-    var result = service.Delete(id.Value);
-    Console.WriteLine(result.Ok ? "Deleted" : result.Error);
+    if (store.Delete(id.Value))
+        Console.WriteLine("Deleted!");
+    else
+        Console.WriteLine("Not found!");
 }
 
-// ---------------- LINQ flows (now via service)-----------------------
+// ---------------- NEW: LINQ flows -----------------------
 
 void SearchFlow()
 {
     var term = ReadRequired("Search term");
     if (term is null) return;
 
+    var results = store.All
+        .Where(t => t.Title.Contains(term, StringComparison.OrdinalIgnoreCase));
+
     Console.WriteLine();
     Console.WriteLine($"Search results for \"{term}\":");
-    PrintTodos(service.Search(term));
+
+    PrintTodos(results);
 }
 
 void ListPendingFlow()
 {
+    var pending = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue);
+
     Console.WriteLine();
     Console.WriteLine("Pending (sorted by due date): ");
-    PrintTodos(service.PendingSorted());
+    PrintTodos(pending);
 }
 
 void StatsFlow()
 {
-    var (total, done, pending, hasOverdue) = service.Stats();
+    var total       = store.All.Count;
+    var done        = store.All.Count(t => t.IsDone);
+    var pending     = total - done;
+
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var hasOverdue = store.All.Any(t => t.DueDate is { } d && d < today && !t.IsDone);
 
     Console.WriteLine();
     Console.WriteLine("Stats:");
@@ -156,7 +167,10 @@ void StatsFlow()
 
 void NextUpFlow()
 {
-    var nextUp = service.NextUp();
+    var nextUp = store.All
+        .Where(t => !t.IsDone)
+        .OrderBy(t => t.DueDate ?? DateOnly.MaxValue)
+        .FirstOrDefault();
 
     Console.WriteLine();
     if (nextUp is null)
@@ -187,24 +201,6 @@ void PrintMenu()
     Console.WriteLine("9) Next up");                //NEW
     Console.WriteLine("Q) Quit");
     Console.WriteLine("> ");
-}
-
-void PrintTodos(IEnumerable<Todo> items)
-{
-    var any = false;
-
-    foreach (var t in items)
-    {
-        any = true;
-        var status = t.IsDone ? "[x]" : "[ ]";
-        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
-        Console.WriteLine($"{t.Id} {status} {t.Title} (Due: {due})");
-    }
-
-    if (!any)
-    {
-        Console.WriteLine("(No items)");
-    }
 }
 
 string? ReadRequired(string label)
@@ -257,3 +253,24 @@ bool Confirn(string prompt)
     return ans is "y" or "yes";
 }
 
+// new helper to print results
+void PrintTodos(IEnumerable<Todo> items)
+{
+    var any = false;
+
+    foreach(var t in items)
+    {
+        any = true;
+        var status = t.IsDone ? "[x]" : "[ ]";
+        var due = t.DueDate?.ToString("yyyy-MM-dd") ?? "-";
+        Console.WriteLine($"{t.Id} {status} {t.Title} (Due: {due})");
+    }
+
+    if (!any)
+    {
+        Console.WriteLine("(No items)");
+    }
+}
+
+
+*/
