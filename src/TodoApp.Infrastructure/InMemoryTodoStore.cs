@@ -41,10 +41,20 @@ public class InMemoryTodoStore
         var removed = _items.RemoveAll(t => t.Id == id) > 0;
         return removed;
     }
+    
+    public bool Toggle(int id)
+    {
+        if (!_byId.TryGetValue(id, out var existing)) return false;
 
-    /// <summary>
-    /// Seed some sample tasks for demos.
-    /// </summary>
+        var updated = existing with { IsDone = !existing.IsDone };
+
+        var index = _items.FindIndex(t => t.Id == id);
+        if (index >= 0) _items[index] = updated;
+
+        _byId[id] = updated;
+        return true;
+        }
+
     public void Seed()
     {
         Add("Buy milk", DateOnly.FromDateTime(DateTime.Today.AddDays(1)));
@@ -52,3 +62,7 @@ public class InMemoryTodoStore
         Add("Call the mechanic");
     }
 }
+
+    /// <summary>
+    /// Seed some sample tasks for demos.
+    /// </summary>
